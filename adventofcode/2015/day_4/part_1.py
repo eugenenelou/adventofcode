@@ -1,4 +1,3 @@
-from email.errors import NonPrintableDefect
 import sys
 import hashlib
 
