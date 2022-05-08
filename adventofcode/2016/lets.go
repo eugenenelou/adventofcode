@@ -13,6 +13,9 @@ func parseInput() []string {
 	}
 	var instructions []string
 	for _, rawInstruction := range strings.Split(string(content), "\n") {
+		if rawInstruction == "" {
+			break
+		}
 		instructions = append(instructions, rawInstruction)
 	}
 	return instructions
