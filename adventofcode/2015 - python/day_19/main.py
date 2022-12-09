@@ -43,18 +43,14 @@ def main2(input_):
     all operations that return 8 atoms contain (in that order): Y, Y, Ar
     all operations that return 6 atoms contain  (in that order): Y, Ar
     all operations that return 4 atoms contain: Ar
-    all operations return 2 atoms.
+    all other operations return 2 atoms.
 
     So if we had only operations returning 2 atoms, the number of operations needed
     would be the number of atoms in the resulting molecule minus one (the starting e)
     and each Y and Ar each allow to skip 2 operations
     """
     _, molecule = parse_input(input_)
-    result = len(molecule) - 1
-    for atom in molecule:
-        if atom == "Y" or atom == "Ar":
-            result -= 2
-    return result
+    return len(molecule) - 1 - 2 * sum(atom == "Y" or atom == "Ar" for atom in molecule)
 
 
 if __name__ == "__main__":
