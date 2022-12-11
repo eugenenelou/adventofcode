@@ -2,8 +2,6 @@ import sys
 from pathlib import Path
 from functools import lru_cache
 
-from pprint import pprint
-
 
 def parse_input(path: str):
     p = Path(path)
