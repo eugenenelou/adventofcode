@@ -60,6 +60,8 @@ SIZE = 4_000_000
 
 @dataclass
 class Area:
+    # the default rectangles are partially out of bound, but we check
+    # if the result of the intersection is out of bound to compensate
     top_left_limit: int = 0  # <= x + y
     top_right_limit: int = SIZE  # >= x - y
     bot_left_limit: int = -SIZE  # <= x - y
@@ -76,6 +78,7 @@ class Area:
                 yield (x, y)
 
     def __and__(self, other: "Area") -> "Area | None":
+        """Compute the intersection of 2 areas, resulting in another area or none at all"""
         # disjointed:
         if (
             self.top_left_limit > other.bot_right_limit
@@ -90,16 +93,15 @@ class Area:
             top_right_limit=min(self.top_right_limit, other.top_right_limit),
             bot_right_limit=min(self.bot_right_limit, other.bot_right_limit),
         )
-        if area.out_of_bounds() or area.negative_space():
+        if area.out_of_bounds():
             return None
         return area
 
-    def negative_space(self):
-        return (
-            self.bot_right_limit < self.top_left_limit or self.top_right_limit < self.bot_left_limit
-        )
-
     def out_of_bounds(self):
+        """
+        Check if the an area is out of the [0, SIZE] bounds completely
+        this can happen because the initial areas are partially out of bounds
+        """
         x_min = (self.top_left_limit + self.bot_left_limit) // 2
         x_max = (self.top_right_limit + self.bot_right_limit) // 2
         y_min = (self.top_left_limit - self.top_right_limit) // 2
@@ -107,7 +109,11 @@ class Area:
         return x_min > SIZE or x_max < 0 or y_min > SIZE or y_max < 0
 
     @classmethod
-    def get_half_planes(cls, center, dist):
+    def get_quarter_planes(cls, center, dist):
+        """
+        Split the space in 4 areas that cover the entire space, with no overlaps
+        and that excep the of center "center" and radius "dist"
+        """
         x, y = center
         return [
             Area(top_left_limit=x + y + dist + 1, top_right_limit=x - y + dist),
@@ -140,7 +146,7 @@ def main2(sensors, max_coord):
     for i, (sensor, beacon) in enumerate(sensors):
         print(f"[{i+1:02d}/{n:02d}]n areas: {len(areas)}")
         new_areas = []
-        half_planes = Area.get_half_planes(center=sensor, dist=manhattan(sensor, beacon))
+        half_planes = Area.get_quarter_planes(center=sensor, dist=manhattan(sensor, beacon))
         for area in areas:
             for half_plane in half_planes:
                 if (new_area := (area & half_plane)) is not None:
