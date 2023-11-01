@@ -13,7 +13,6 @@ function checkExactCount(lettersCount:  Map<string, number>, exactCount: number)
   return false
 }
 
-type d = Object
 
 function main1(input: string) {
   const data = parseInput(input)
