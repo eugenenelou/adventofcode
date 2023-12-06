@@ -1,3 +1,4 @@
+import math
 import sys
 from pathlib import Path
 
@@ -16,7 +17,7 @@ def parse_input(path: str):
     )
 
 
-def main1(input_):
+def original_main1(input_):
     res = 1
     for i, (time, record_distance) in enumerate(input_):
         count = 0
@@ -25,6 +26,18 @@ def main1(input_):
             distance = (time - j) * speed
             if distance > record_distance:
                 count += 1
+        res *= count
+    return res
+
+
+def main1(input_):
+    res = 1
+    for i, (time, record_distance) in enumerate(input_):
+        # solving x(time-x) > record_distance
+        det = time * time - 4 * record_distance
+        r1 = (time + math.sqrt(det)) / 2
+        r2 = (time - math.sqrt(det)) / 2
+        count = math.floor(r1 - 1e-9) - math.ceil(r2 + 1e-9) + 1
         print(f"{count} number of ways for race {i}")
         res *= count
     return res
