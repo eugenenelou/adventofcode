@@ -17,7 +17,9 @@ function main2(input: string) {
 
 
 const decoder = new TextDecoder()
+let input = ""
 for await (const chunk of Deno.stdin.readable) {
-  const main = Deno.args.includes( "--two") ? main2 : main1
-  console.log(`The result is: ${main(decoder.decode(chunk))}`)
+  input += decoder.decode(chunk)
 }
+const main = Deno.args.includes( "--two") ? main2 : main1
+console.log(`The result is: ${main(input)}`)
