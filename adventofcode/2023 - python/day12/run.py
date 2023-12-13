@@ -22,7 +22,10 @@ def split_row_in_masks(row: str) -> tuple:
 
 @cache
 def count_row(
-    masks: tuple, group_sizes: tuple[int], mask_total: int, group_total: int
+    masks: tuple[str, ...],
+    group_sizes: tuple[int, ...],
+    mask_total: int,
+    group_total: int,
 ) -> int:
     if mask_total < group_total:
         return 0
