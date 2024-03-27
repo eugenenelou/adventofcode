@@ -5,13 +5,13 @@ use std::env;
 use std::fs;
 // use std::iter::zip;
 
-struct Program<'a> {
-    name: &'a String,
+struct Program {
+    name: String,
     weight: u32,
     sub_towers: Vec<String>,
 }
 
-impl Program<'_> {
+impl Program {
     fn from_raw(line: &str) -> Program {
         let input_regex: Regex = Regex::new(r"^(\S+) \((\d+)\)(?: -> ((\S+, )*\S+))?").unwrap();
         let cap = input_regex.captures(line).unwrap();
@@ -19,8 +19,9 @@ impl Program<'_> {
             None => vec![],
             Some(s) => s.as_str().split(", ").map(|n| n.to_string()).collect(),
         };
+        let name = cap[1].to_string();
         return Program {
-            name: &cap[1].to_string(),
+            name: name,
             weight: cap[2].parse::<u32>().unwrap(),
             sub_towers,
         };
@@ -37,26 +38,31 @@ fn parse_input(file_path: &String) -> Vec<Program> {
         .collect()
 }
 
-fn run1<'a>(programs: Vec<Program>) -> &'a Program {
+fn run1(programs: &Vec<Program>) -> String {
     let mut all_programs = HashMap::new();
     let mut all_non_bottom_programs = HashSet::new();
     for program in programs {
-        all_programs.insert(program.name, &program);
         for sub_name in program.sub_towers.iter() {
-            all_non_bottom_programs.insert(sub_name);
+            all_non_bottom_programs.insert(sub_name.clone());
         }
+        all_programs.insert(program.name.clone(), program);
     }
-    let mut root_programs = HashSet::from_iter(all_programs.keys().map(|s| *s).into_iter())
-        .difference(&all_non_bottom_programs) // how to move the values from "all_programs" instead of copying?
-        .map(|s| *s)
-        .collect::<Vec<&String>>();
+    let mut root_programs = HashSet::from_iter(all_programs.keys().into_iter().map(|s| s.clone()))
+        .difference(&all_non_bottom_programs)
+        .map(|s| s.clone())
+        .collect::<Vec<String>>();
     if root_programs.len() > 1 {
         panic!("Found more than 1 bottom programs: {:?}", root_programs);
     }
     let root_program_name = root_programs.pop().unwrap();
-    all_programs.get(&root_program_name).unwrap()
+    all_programs
+        .remove(&root_program_name)
+        .unwrap()
+        .name
+        .clone()
 }
 
+#[derive(Debug)]
 enum BalanceResult {
     OK(u32),
     Unbalanced(u32),
@@ -71,86 +77,81 @@ impl BalanceResult {
     }
 }
 
-// fn balance(tower: HashMap<&String, Vec<Program>>, program: &Program) -> BalanceResult {
-//     // returnst the total weight of the node and its sub nodes
-//     match tower.get(program.name) {
-//         None => return BalanceResult::OK(program.weight),
-//         Some(programs) => {
-//             let sub_balance_results: Vec<BalanceResult> = programs
-//                 .iter()
-//                 .map(|program| balance(tower, program))
-//                 .collect();
-//             for sub_balance in sub_balance_results.into_iter() {
-//                 match sub_balance {
-//                     BalanceResult::Unbalanced(_) => return sub_balance,
-//                     BalanceResult::OK(_) => (),
-//                 }
-//             }
-//             match sub_balance_results[..] {
-//                 [r] => return BalanceResult::OK(r.unwrap() + program.weight),
-//                 _ => {
-//                     let weight_counts = HashMap::new();
-//                     for sub_balance_result in sub_balance_results {
-//                         let sub_weight = sub_balance_result.unwrap();
-//                         let weight = weight_counts.get(&sub_weight);
-//                         if weight == None {
-//                             weight_counts.insert(sub_weight, 1);
-//                         } else {
-//                             weight_counts.insert(sub_weight, weight.unwrap() + 1);
-//                         }
-//                     }
-//                     let mut imba_weight = None; // imbalanced weight of the total sub tree
-//                     let mut bal_weight = None; // balanced weight of the total sub tree
-//                                                // we need then to find which node to updated, and add the delta (balanced - imbalanced) to its weight
-//                     for (weight, count) in weight_counts.iter() {
-//                         // we assume that in case of imbalance, only one node will have a unique value
-//                         if *count == 1 {
-//                             imba_weight = Some(weight);
-//                         } else {
-//                             bal_weight = Some(weight);
-//                         }
-//                     }
-//                     if bal_weight == None {
-//                         panic!("No able to found the expected balanced weight")
-//                     }
-//                     if imba_weight != None {
-//                         for (program, program_total_weight) in zip(programs, sub_balance_results) {
-//                             if program_total_weight.unwrap() == *imba_weight.unwrap() {
-//                                 return BalanceResult::Unbalanced(
-//                                     program.weight + bal_weight.unwrap() - imba_weight.unwrap(),
-//                                 );
-//                             }
-//                         }
-//                     }
-//                     return BalanceResult::OK(
-//                         program.weight
-//                             + sub_balance_results.iter().map(|r| r.unwrap()).sum::<u32>(),
-//                     );
-//                 }
-//             }
-//         }
-//     }
-// }
+fn check_balance(tower: &HashMap<String, Program>, program_name: &str) -> BalanceResult {
+    let program = tower.get(program_name).unwrap();
+    match program.sub_towers.len() {
+        0 => BalanceResult::OK(program.weight),
+        1 => {
+            let sub_balance = check_balance(&tower, &program.sub_towers[0]);
+            match sub_balance {
+                BalanceResult::Unbalanced(_) => return sub_balance,
+                BalanceResult::OK(weight) => return BalanceResult::OK(program.weight + weight),
+            }
+        }
+        _ => {
+            let sub_weights: Vec<BalanceResult> = program
+                .sub_towers
+                .iter()
+                .map(|name| check_balance(tower, name))
+                .collect();
+            for sub_weight in sub_weights.iter() {
+                match sub_weight {
+                    BalanceResult::Unbalanced(weight) => return BalanceResult::Unbalanced(*weight),
+                    BalanceResult::OK(_) => (),
+                }
+            }
+            let first_weight = sub_weights[0].unwrap();
+            if sub_weights
+                .iter()
+                .all(|result| result.unwrap() == first_weight)
+            {
+                return BalanceResult::OK(
+                    program.weight + first_weight * program.sub_towers.len() as u32,
+                );
+            }
+            if program.sub_towers.len() == 2 {
+                panic!("Cannot handle unbalanced subtree of 2, need to go to the parent program for this")
+            }
+            let mut found_first_weight = 0;
+            let mut other_value = 0;
+            let mut other_value_idx: usize = 0;
+            for (idx, sub_weight_result) in sub_weights.iter().enumerate() {
+                let sub_weight = sub_weight_result.unwrap();
+                if sub_weight == first_weight {
+                    found_first_weight += 1;
+                } else {
+                    other_value = sub_weight;
+                    other_value_idx = idx
+                }
+            }
+            if found_first_weight > 1 {
+                // the expected weight is first_weight
+                let sub_program_weight = tower
+                    .get(&program.sub_towers[other_value_idx])
+                    .unwrap()
+                    .weight;
+                return BalanceResult::Unbalanced(sub_program_weight + first_weight - other_value);
+            } else {
+                let sub_program_weight = tower.get(&program.sub_towers[0]).unwrap().weight;
 
-// fn run2(programs: Vec<Program>) -> BalanceResult {
-//     let root_program = run1(programs);
-//     let program_tower: HashMap<&String, Vec<Program>> =
-//         programs.into_iter().fold(HashMap::new(), |acc, program| {
-//             match acc.get(program.name) {
-//                 None => {
-//                     acc.insert(program.name, vec![program]);
-//                 }
-//                 Some(programs) => {
-//                     programs.push(program);
-//                 }
-//             }
-//             acc
-//         });
-//     balance(program_tower, &root_program)
-// }
+                return BalanceResult::Unbalanced(sub_program_weight + other_value - first_weight);
+            }
+        }
+    }
+}
 
-fn run2(_programs: Vec<Program>) -> BalanceResult {
-    BalanceResult::OK(0)
+fn run2(programs: Vec<Program>) -> u32 {
+    let root_program_name = run1(&programs);
+
+    let mut all_programs = HashMap::new();
+    for program in programs {
+        all_programs.insert(program.name.clone(), program);
+    }
+
+    match check_balance(&all_programs, &root_program_name) {
+        BalanceResult::OK(_) => panic!("Root program is balanced"),
+        BalanceResult::Unbalanced(weight) => weight,
+    }
 }
 
 fn main() {
@@ -160,8 +161,8 @@ fn main() {
     let input = parse_input(file_path);
 
     if is_part_two {
-        println!("Result 2 is {}", run2(input).unwrap())
+        println!("Result 2 is {}", run2(input))
     } else {
-        println!("Result 1 is {:?}", run1(input).name)
+        println!("Result 1 is {:?}", run1(&input))
     }
 }
