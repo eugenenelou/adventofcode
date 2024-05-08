@@ -21,7 +21,7 @@ enum Cell {
 fn parse_input(file_path: &String) -> ((usize, usize), Vec<Vec<Cell>>) {
     let mut grid: Vec<Vec<Cell>> = fs::read_to_string(file_path)
         .expect("Cannot read file")
-        .split("\r\n")
+        .lines()
         .map(|row| {
             row.chars()
                 .map(|c| match c {

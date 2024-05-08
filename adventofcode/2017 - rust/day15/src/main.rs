@@ -3,7 +3,7 @@ use std::fs;
 
 fn parse_input(file_path: &String) -> (u64, u64) {
     let binding = fs::read_to_string(file_path).expect("Cannot read file");
-    let mut iter = binding.trim().split("\r\n").map(|v| v.parse::<u64>());
+    let mut iter = binding.trim().lines().map(|v| v.parse::<u64>());
     let a = iter.next().unwrap().unwrap();
     let b = iter.next().unwrap().unwrap();
     (a, b)

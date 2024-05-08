@@ -4,7 +4,7 @@ fn parse_input(file_path: &String) -> Vec<(u32, u32)> {
     fs::read_to_string(file_path)
         .expect("Cannot read file")
         .trim()
-        .split("\r\n")
+        .lines()
         .map(|raw| {
             let mut iter = raw.split(": ");
             let idx: u32 = iter.next().unwrap().parse().unwrap();

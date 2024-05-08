@@ -29,7 +29,7 @@ fn parse_input(file_path: &String) -> Vec<Instruction> {
     fs::read_to_string(file_path)
         .expect("Cannot read file")
         .trim()
-        .split("\r\n")
+        .lines()
         .map(|row| {
             let mut iter = row.split(" ");
             match iter.next().unwrap() {

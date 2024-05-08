@@ -50,7 +50,7 @@ fn parse_input(file_path: &String) -> Vec<Operation> {
     fs::read_to_string(file_path)
         .expect("Cannot read file")
         .trim()
-        .split("\r\n")
+        .lines()
         .map(|line| {
             let elements: Vec<&str> = line.split(" ").collect();
             Operation {

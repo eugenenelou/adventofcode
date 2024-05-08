@@ -8,7 +8,7 @@ fn parse_input(file_path: &String) -> HashMap<u32, Vec<u32>> {
         .expect("Cannot read file")
         .trim()
         .to_owned()
-        .split("\r\n")
+        .lines()
         .for_each(|row| {
             let mut iter = row.splitn(2, " <-> ");
             let ifrom = iter.next().unwrap().parse::<u32>().unwrap();
