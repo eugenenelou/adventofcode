@@ -64,43 +64,51 @@ def main1(input_):
         i += 1
 
 
+def has_solution(H, W, coords, cutoff):
+    grid = construct_grid(H, W, coords[:cutoff])
+
+    paths_reached = {(0, 0)}
+    paths = [(0, 0)]
+    i = 0
+    found = False
+    while paths and not found:
+        new_paths = []
+        for x, y in paths:
+            for dx, dy in DIRECTIONS:
+                new_x = x + dx
+                new_y = y + dy
+                if (
+                    (new_x, new_y) in paths_reached
+                    or new_x < 0
+                    or new_x >= H
+                    or new_y < 0
+                    or new_y >= W
+                ):
+                    continue
+
+                if new_x == H - 1 and new_y == W - 1:
+                    found = True
+                if not grid[new_x][new_y]:
+                    paths_reached.add((new_x, new_y))
+                    new_paths.append((new_x, new_y))
+        paths = new_paths
+        i += 1
+    return found
+
+
 def main2(input_):
     H, W, coords = input_
 
-    cutoff = 1024
-    while True:
-        cutoff += 1
-        grid = construct_grid(H, W, coords[:cutoff])
-
-        paths_reached = {(0, 0)}
-        paths = [(0, 0)]
-        i = 0
-        found = False
-        while paths and not found:
-            new_paths = []
-            for x, y in paths:
-                for dx, dy in DIRECTIONS:
-                    new_x = x + dx
-                    new_y = y + dy
-                    if (
-                        (new_x, new_y) in paths_reached
-                        or new_x < 0
-                        or new_x >= H
-                        or new_y < 0
-                        or new_y >= W
-                    ):
-                        continue
-
-                    if new_x == H - 1 and new_y == W - 1:
-                        found = True
-                    if not grid[new_x][new_y]:
-                        paths_reached.add((new_x, new_y))
-                        new_paths.append((new_x, new_y))
-            paths = new_paths
-            i += 1
-        if not found:
-            print("cutoff", cutoff)
-            return coords[cutoff - 1]
+    # binary search
+    solution = 1024
+    impossible = len(coords)
+    while solution + 1 < impossible:
+        test = (solution + impossible) // 2
+        if has_solution(H, W, coords, test):
+            solution = test
+        else:
+            impossible = test
+    return coords[solution]
 
 
 if __name__ == "__main__":
