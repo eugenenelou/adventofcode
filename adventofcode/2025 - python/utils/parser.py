@@ -27,7 +27,11 @@ class MultiGroupsParser[GroupsData: tuple[Any, ...]](Parser[GroupsData, Never]):
     groups_parser: list[Parser[Any, list[Any]]]
 
     def parse(self, input_: str, *, context=None) -> GroupsData:
-        res = [None]
+        res = []
         for group_parser, input_group in zip(self.groups_parser, input_.split('\n\n'), strict=True) :
             res.append(group_parser.parse(input_group, context=res))
         return res
+    
+def parse_int_pair(raw: str, *, separator="-") -> tuple[int, int]:
+    a, b = raw.split(separator)
+    return int(a), int(b)
