@@ -1,7 +1,7 @@
 # Run
 
 ```sh
-python test.input.txt
-python input.txt
-python input.txt --two
+python -m dayX.run dayX/test.input.txt
+python -m dayX.run dayX/input.txt
+python -m dayX.run dayX/input.txt --two
 ```

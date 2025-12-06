@@ -1,12 +1,18 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Never, Protocol
+from typing import Any, Never, Protocol, cast
 
 
 class Parser[T, C = None](Protocol):
     def parse(self, input_: str, *, context: C) -> T:
         raise NotImplementedError
 
+@dataclass
+class FnParser[T](Parser[T, None]):
+    fn: Callable[[str], T] = lambda x: cast('T', x)
 
+    def parse(self, input_:str, *,context = None):
+        return self.fn(input_)
 
 @dataclass
 class IterableParser[T, C = None](Parser[list[T]]):

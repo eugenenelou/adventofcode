@@ -1,27 +1,24 @@
 import sys
 from pathlib import Path
+from utils.parser import IterableParser
+
+type Data = ...
 
 
-def parse_input(path: str):
-    p = Path(path)
-    content = p.read_text()
-    if content.endswith("\n"):
-        content = content[:-1]
-    return content.split("\n")
+parser = IterableParser[Data, None](..., separator=",")
 
-
-def main1(input_):
+def main1(data: list[Data]):
     return 0
 
 
-def main2(input_):
+def main2(data: list[Data]):
     return 0
 
 
 if __name__ == "__main__":
     input_filepath = sys.argv[1]
     second_part = len(sys.argv) > 2 and sys.argv[2] == "--two"
-    input_ = parse_input(input_filepath)
+    input_ = parser.parse(Path(input_filepath).read_text())
     if second_part:
         print(f"result: {main2(input_)}", file=sys.stdout)
     else:
