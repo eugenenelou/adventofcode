@@ -27,7 +27,7 @@ class IterableParser[T, C = None](Parser[list[T]]):
         res = [
             self.line_parser.parse(line, context=context)
             for line in (
-                input_.split(self.separator)
+                (input_.split(self.separator) if self.separator else input_)
                 if isinstance(self.separator, str)
                 else self.separator.split(input_)
             )
